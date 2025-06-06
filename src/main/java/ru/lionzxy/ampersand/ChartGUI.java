@@ -1,9 +1,10 @@
 package ru.lionzxy.ampersand;
 
-import com.sun.tools.javac.util.Pair;
+import kotlin.Pair;
 import org.knowm.xchart.QuickChart;
 import org.knowm.xchart.SwingWrapper;
 import org.knowm.xchart.XYChart;
+import org.knowm.xchart.XYChartBuilder;
 import ru.lionzxy.ampersand.utils.ListWithTimeLimit;
 
 import java.util.ArrayList;
@@ -24,7 +25,9 @@ public class ChartGUI extends Thread {
         initialTime = System.currentTimeMillis();
         double[][] initdata = getData();
 
-        chart = QuickChart.getChart("Ampersand", "time", "voltage", "voltage", initdata[0], initdata[1]);
+        chart = QuickChart.getChart("Ampersand", "time (ms)", "power (µW)", "power", initdata[0], initdata[1]);
+        chart.getStyler().setYAxisMin(0.0);
+        chart.getStyler().setYAxisMax(15000.0);
         swingWrapper = new SwingWrapper<>(chart);
     }
 
@@ -56,14 +59,15 @@ public class ChartGUI extends Thread {
     private synchronized void onUpdate() {
         double[][] data = getData();
         javax.swing.SwingUtilities.invokeLater(() -> {
-            chart.updateXYSeries("voltage", data[0], data[1], null);
+
+            chart.updateXYSeries("power", data[0], data[1], null);
             swingWrapper.repaintChart();
         });
         isDirty = false;
     }
 
     private double[][] getData() {
-        final List<Pair<Long, Integer>> local = new ArrayList<>(listWithTimeLimit);
+        final List<Pair<Long, Integer>> local = new ArrayList(listWithTimeLimit);
         if (local.isEmpty()) {
             return new double[][]{new double[]{0}, new double[]{0}};
         }
@@ -72,8 +76,8 @@ public class ChartGUI extends Thread {
 
         for (int i = 0; i < local.size(); i++) {
             final Pair<Long, Integer> point = local.get(i);
-            xData[i] = point.fst - initialTime;
-            yData[i] = point.snd;
+            xData[i] = point.getFirst() - initialTime;
+            yData[i] = point.getSecond();
         }
 
         return new double[][]{xData, yData};

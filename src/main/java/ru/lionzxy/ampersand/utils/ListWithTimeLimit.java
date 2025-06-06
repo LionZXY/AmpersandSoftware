@@ -1,6 +1,7 @@
 package ru.lionzxy.ampersand.utils;
 
-import com.sun.tools.javac.util.Pair;
+
+import kotlin.Pair;
 
 import java.util.LinkedList;
 
@@ -18,13 +19,13 @@ public class ListWithTimeLimit<T extends Comparable> extends LinkedList<Pair<Lon
             return;
         }
 
-        long diff = timestamp - getFirst().fst;
+        long diff = timestamp - getFirst().getFirst();
         while (diff > timeLimit) {
             removeFirst();
             if (isEmpty()) {
                 break;
             }
-            diff = timestamp - getFirst().fst;
+            diff = timestamp - getFirst().getFirst();
         }
 
         add(new Pair<>(timestamp, element));
