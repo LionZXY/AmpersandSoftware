@@ -5,7 +5,7 @@ import kotlin.Pair;
 
 import java.util.LinkedList;
 
-public class ListWithTimeLimit<T extends Comparable> extends LinkedList<Pair<Long, T>> {
+public class ListWithTimeLimit<T> extends LinkedList<Pair<Long, T>> {
     private final long timeLimit;
 
     public ListWithTimeLimit(long timeLimit) {

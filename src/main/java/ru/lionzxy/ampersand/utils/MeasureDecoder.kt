@@ -1,7 +1,7 @@
 package ru.lionzxy.ampersand.utils
 
 object MeasureDecoder {
-    fun decode(buffer: Array<UByte>): Pair<UInt, UInt>? {
+    fun decode(buffer: List<UByte>): Pair<UInt, UInt>? {
         if (buffer.size < 3) {
             return null
         }
@@ -17,7 +17,7 @@ object MeasureDecoder {
 }
 
 fun main() {
-    val pair = MeasureDecoder.decode(arrayOf(19u, 16u, 2u))
+    val pair = MeasureDecoder.decode(listOf(19u, 16u, 2u))
     if (pair == null) {
         print("Array too small")
         return
