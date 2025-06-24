@@ -2,10 +2,14 @@ package ru.lionzxy.ampersand.utils;
 
 
 import kotlin.Pair;
+import kotlin.jvm.Synchronized;
 
-import java.util.LinkedList;
+import java.lang.reflect.Array;
+import java.util.*;
 
-public class ListWithTimeLimit<T> extends LinkedList<Pair<Long, T>> {
+public class ListWithTimeLimit<T> {
+    private LinkedList<Pair<Long, T>> delegate = new LinkedList<>();
+
     private final long timeLimit;
 
     public ListWithTimeLimit(long timeLimit) {
@@ -13,21 +17,32 @@ public class ListWithTimeLimit<T> extends LinkedList<Pair<Long, T>> {
         this.timeLimit = timeLimit;
     }
 
+    @Synchronized
     public void add(T element, long timestamp) {
-        if (isEmpty()) {
-            add(new Pair<>(timestamp, element));
+        if (delegate.isEmpty()) {
+            delegate.add(new Pair<>(timestamp, element));
             return;
         }
 
-        long diff = timestamp - getFirst().getFirst();
+        long diff = timestamp - delegate.getFirst().getFirst();
         while (diff > timeLimit) {
-            removeFirst();
-            if (isEmpty()) {
+            delegate.removeFirst();
+            if (delegate.isEmpty()) {
                 break;
             }
-            diff = timestamp - getFirst().getFirst();
+            diff = timestamp - delegate.getFirst().getFirst();
         }
 
-        add(new Pair<>(timestamp, element));
+        delegate.add(new Pair<>(timestamp, element));
+    }
+
+    @Synchronized
+    public List<Pair<Long, T>> threadSafeSnapshot() {
+        Object[] snapshotArray = delegate.toArray();
+        List<Pair<Long, T>> newList = new ArrayList<>(snapshotArray.length);
+        for (Object element : snapshotArray) {
+            newList.add((Pair<Long, T>) element);
+        }
+        return newList;
     }
 }
