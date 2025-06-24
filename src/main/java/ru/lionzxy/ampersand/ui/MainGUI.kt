@@ -2,19 +2,24 @@ package ru.lionzxy.ampersand.ui
 
 import org.knowm.xchart.XChartPanel
 import ru.lionzxy.ampersand.chart.AmpersandChart
+import java.awt.BorderLayout
 import java.awt.Container
+import java.awt.Dimension
+import java.awt.FlowLayout
 import java.awt.GridBagConstraints
 import java.awt.GridBagLayout
 import javax.swing.JButton
 import javax.swing.JCheckBox
 import javax.swing.JFrame
+import javax.swing.JPanel
 import javax.swing.WindowConstants
+import javax.swing.border.Border
 
 private const val BTN_TITLE_START = "START"
 private const val BTN_TITLE_STOP = "STOP"
 
 class MainGUI(
-    chart: AmpersandChart
+    private val chart: AmpersandChart
 ) {
     private val frame: JFrame = JFrame("Ampersand")
     private val checkboxPower = JCheckBox("Мощность", chart.isPowerChartEnabled).apply {
@@ -29,7 +34,6 @@ class MainGUI(
     private val stateButton = JButton("START").apply {
         isEnabled = false
     }
-    private val chartPanel = XChartPanel(chart)
 
     init {
         layout(frame)
@@ -39,15 +43,15 @@ class MainGUI(
         runOnUiThread {
             frame.setDefaultCloseOperation(WindowConstants.EXIT_ON_CLOSE)
             // Display the window.
-            frame.pack()
-            frame.setLocationRelativeTo(null)
             frame.isVisible = true
+
+            frame.size = Dimension(1000, 900)
         }
     }
 
     fun repaint() {
-        chartPanel.revalidate()
-        chartPanel.repaint()
+        frame.repaint()
+        chart.revalidate()
     }
 
     fun onChangeStartState(onChange: (Boolean) -> Unit) {
@@ -64,29 +68,21 @@ class MainGUI(
     }
 
     private fun layout(pane: Container) {
-        val root = GridBagLayout()
+        val root = BorderLayout()
 
         pane.layout = root
 
-        val c = GridBagConstraints()
-        c.fill = GridBagConstraints.HORIZONTAL
-        c.gridx = 0
-        c.gridy = 0
-        pane.add(checkboxPower, c)
+        val flowPanel = JPanel()
+        flowPanel.layout = FlowLayout()
 
-        c.gridx = 1
-        pane.add(checkboxVoltage, c)
 
-        c.gridx = 2
-        pane.add(checkboxCurrent, c)
+        flowPanel.add(checkboxPower)
+        flowPanel.add(checkboxVoltage)
+        flowPanel.add(checkboxCurrent)
+        flowPanel.add(stateButton)
 
-        c.gridx = 3
-        pane.add(stateButton, c)
+        pane.add(flowPanel, BorderLayout.PAGE_START)
 
-        c.weightx = 0.0
-        c.gridwidth = 4
-        c.gridx = 0
-        c.gridy = 1
-        pane.add(chartPanel, c)
+        pane.add(chart, BorderLayout.CENTER)
     }
 }

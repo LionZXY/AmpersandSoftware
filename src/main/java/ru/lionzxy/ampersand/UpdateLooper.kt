@@ -11,7 +11,7 @@ class UpdateLooper : Thread() {
     private val listWithTimeLimit = ListWithTimeLimit<ChartPoint>(PLOT_WIDTH_MILLIS)
     private var initialTime: Long = 0
     private val chart: AmpersandChart
-    val mainGui: MainGUI
+    private val mainGui: MainGUI
     private var isDirty = false
 
     init {
@@ -53,8 +53,8 @@ class UpdateLooper : Thread() {
     @Synchronized
     private fun onUpdate() {
         val snapshot = listWithTimeLimit.threadSafeSnapshot()
-        chart.update(snapshot)
         SwingUtilities.invokeLater {
+            chart.update(snapshot)
             mainGui.repaint()
         }
         isDirty = false

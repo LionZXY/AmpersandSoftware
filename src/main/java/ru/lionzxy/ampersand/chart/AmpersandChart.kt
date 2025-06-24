@@ -1,48 +1,61 @@
 package ru.lionzxy.ampersand.chart
 
-import org.knowm.xchart.XYChart
+import com.jidesoft.chart.Chart
+import com.jidesoft.chart.DefaultAutoRanger
+import com.jidesoft.chart.model.ChartModel
+import com.jidesoft.chart.model.DefaultChartModel
+import com.jidesoft.chart.style.ChartStyle
+import java.awt.BorderLayout
+import java.awt.Color
+import java.awt.Dimension
+import javax.swing.JPanel
+import javax.swing.SizeRequirements
 
 private const val CHART_NAME_POWER = "Мощность"
 private const val CHART_NAME_CURRENT = "Сила тока"
 private const val CHART_NAME_VOLTAGE = "Напряжение"
 
-private const val WIDTH = 1800
-private const val HEIGHT = 400
+class AmpersandChart() : JPanel() {
+    private val chart = Chart()
 
-class AmpersandChart(
-) : XYChart(WIDTH, HEIGHT) {
     private val initialTime = System.currentTimeMillis()
 
-    var isPowerChartEnabled: Boolean = true
+    private var powerChartModel: DefaultChartModel? = null
         set(value) {
-            field = updateEnabledState(CHART_NAME_POWER, field, value)
+            field = updateChart(field, value)
+        }
+    var isPowerChartEnabled: Boolean
+        get() = powerChartModel != null
+        set(value) {
+            powerChartModel = onEnabled(CHART_NAME_POWER, value)
         }
 
-    var isCurrentChartEnabled: Boolean = false
+    private var currentChartModel: DefaultChartModel? = null
         set(value) {
-            field = updateEnabledState(CHART_NAME_CURRENT, field, value)
+            field = updateChart(field, value)
+        }
+    var isCurrentChartEnabled: Boolean
+        get() = currentChartModel != null
+        set(value) {
+            currentChartModel = onEnabled(CHART_NAME_CURRENT, value)
         }
 
-    var isVoltageChartEnabled: Boolean = false
+    private var voltageChartModel: DefaultChartModel? = null
         set(value) {
-            field = updateEnabledState(CHART_NAME_VOLTAGE, field, value)
+            field = updateChart(field, value)
+        }
+    var isVoltageChartEnabled: Boolean
+        get() = voltageChartModel != null
+        set(value) {
+            voltageChartModel = onEnabled(CHART_NAME_VOLTAGE, value)
         }
 
     init {
-        styler.yAxisMin = 0.0
-        styler.yAxisMax = 5.0
-    }
-
-    init {
-        if (isPowerChartEnabled) {
-            addSeries(CHART_NAME_POWER, DoubleArray(1) { 0.0 })
-        }
-        if (isCurrentChartEnabled) {
-            addSeries(CHART_NAME_CURRENT, DoubleArray(1) { 0.0 })
-        }
-        if (isVoltageChartEnabled) {
-            addSeries(CHART_NAME_VOLTAGE, DoubleArray(1) { 0.0 })
-        }
+        layout = BorderLayout()
+        chart.autoRanger = DefaultAutoRanger(null, 0.0, null, 5.0)
+        chart.isAutoRanging = true
+        add(chart, BorderLayout.CENTER)
+        isPowerChartEnabled = true
     }
 
     fun update(
@@ -51,39 +64,41 @@ class AmpersandChart(
         if (snapshot.isEmpty()) {
             return
         }
-        val timeDataX = DoubleArray(snapshot.size)
-        val powerDataY = DoubleArray(snapshot.size)
-        val currentDataY = DoubleArray(snapshot.size)
-        val voltageDataY = DoubleArray(snapshot.size)
+        powerChartModel?.clearPoints()
+        currentChartModel?.clearPoints()
+        voltageChartModel?.clearPoints()
 
         snapshot.forEachIndexed { index, point ->
-            timeDataX[index] = (point.first - initialTime).toDouble()
-            powerDataY[index] = point.second.power
-            currentDataY[index] = point.second.current
-            voltageDataY[index] = point.second.voltage
-        }
-
-        if (isPowerChartEnabled) {
-            updateXYSeries(CHART_NAME_POWER, timeDataX, powerDataY, null)
-        }
-        if (isCurrentChartEnabled) {
-            updateXYSeries(CHART_NAME_CURRENT, timeDataX, currentDataY, null)
-        }
-        if (isVoltageChartEnabled) {
-            updateXYSeries(CHART_NAME_VOLTAGE, timeDataX, voltageDataY, null)
+            val timePoint = (point.first - initialTime).toInt()
+            powerChartModel?.addPoint(timePoint, point.second.power)
+            currentChartModel?.addPoint(timePoint, point.second.current)
+            voltageChartModel?.addPoint(timePoint, point.second.voltage)
         }
     }
 
-    private fun updateEnabledState(seriesName: String, currentState: Boolean, newState: Boolean): Boolean {
-        if (currentState) {
-            if (newState.not()) {
-                removeSeries(seriesName)
+    private fun updateChart(currentState: DefaultChartModel?, newState: DefaultChartModel?): DefaultChartModel? {
+        if (currentState == null) {
+            if (newState != null) {
+                val chartStyle = ChartStyle(Color.blue, false, true)
+                chart.addModel(newState, chartStyle)
             }
         } else {
-            if (newState) {
-                addSeries(seriesName, DoubleArray(1) { 0.0 })
+            if (newState == null) {
+                chart.removeModel(currentState)
+            } else {
+                chart.replaceModel(currentState, newState)
             }
         }
         return newState
+    }
+
+    private fun onEnabled(chartName: String, newValue: Boolean): DefaultChartModel? {
+        return if (newValue) {
+            DefaultChartModel(chartName).apply {
+                addPoint(0, 0)
+            }
+        } else {
+            null
+        }
     }
 }
