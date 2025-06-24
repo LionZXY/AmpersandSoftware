@@ -4,8 +4,11 @@ import ru.lionzxy.ampersand.chart.AmpersandChart
 import ru.lionzxy.ampersand.chart.ChartPoint
 import ru.lionzxy.ampersand.ui.MainGUI
 import ru.lionzxy.ampersand.utils.ListWithTimeLimit
-import java.util.concurrent.TimeUnit
 import javax.swing.SwingUtilities
+
+private const val PLOT_WIDTH_MILLIS = 3 * 1000L // 3 seconds
+private const val FPS = 30
+private const val SLEEP_TIME = (1000 / FPS).toLong()
 
 class UpdateLooper : Thread() {
     private val listWithTimeLimit = ListWithTimeLimit<ChartPoint>(PLOT_WIDTH_MILLIS)
@@ -58,11 +61,5 @@ class UpdateLooper : Thread() {
             mainGui.repaint()
         }
         isDirty = false
-    }
-
-    companion object {
-        private val PLOT_WIDTH_MILLIS = 3 * 1000L
-        private const val FPS = 30
-        private val SLEEP_TIME = (1000 / FPS).toLong()
     }
 }

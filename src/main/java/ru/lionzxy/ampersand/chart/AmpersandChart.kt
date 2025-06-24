@@ -11,6 +11,8 @@ import java.awt.Dimension
 import javax.swing.JPanel
 import javax.swing.SizeRequirements
 
+typealias LibChartPoint = com.jidesoft.chart.model.ChartPoint
+
 private const val CHART_NAME_POWER = "Мощность"
 private const val CHART_NAME_CURRENT = "Сила тока"
 private const val CHART_NAME_VOLTAGE = "Напряжение"
@@ -68,12 +70,15 @@ class AmpersandChart() : JPanel() {
         currentChartModel?.clearPoints()
         voltageChartModel?.clearPoints()
 
-        snapshot.forEachIndexed { index, point ->
-            val timePoint = (point.first - initialTime).toInt()
-            powerChartModel?.addPoint(timePoint, point.second.power)
-            currentChartModel?.addPoint(timePoint, point.second.current)
-            voltageChartModel?.addPoint(timePoint, point.second.voltage)
+        snapshot.forEach { point ->
+            val timePoint = (point.first - initialTime).toDouble()
+            powerChartModel?.addPoint(LibChartPoint(timePoint, point.second.power), false)
+            currentChartModel?.addPoint(LibChartPoint(timePoint, point.second.current), false)
+            voltageChartModel?.addPoint(LibChartPoint(timePoint, point.second.voltage), false)
         }
+        powerChartModel?.update()
+        currentChartModel?.update()
+        voltageChartModel?.update()
     }
 
     private fun updateChart(currentState: DefaultChartModel?, newState: DefaultChartModel?): DefaultChartModel? {
